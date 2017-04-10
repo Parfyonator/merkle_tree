@@ -19,9 +19,9 @@ fn main() {
 
     // check if the tree is valid
     if mt.validate() {
-        println!("Tree is valid. No damaged leaves present.");
+        println!("Tree is valid. No damaged leafs present.");
     } else {
-        println!("Tree is invalid. One or more leaves are damaged.");
+        println!("Tree is invalid. One or more leafs are damaged.");
     }
 
     // corrupt the tree
@@ -29,8 +29,8 @@ fn main() {
 
     // check if the tree is valid
     if mt.validate() {
-        println!("Tree is valid. No damaged leaves present.");
+        println!("Tree is valid. No damaged leafs present.");
     } else {
-        println!("Tree is invalid. One or more leaves are damaged.");
+        println!("Tree is invalid. One or more leafs are damaged.");
     }
 }
