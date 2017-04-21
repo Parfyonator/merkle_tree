@@ -58,12 +58,12 @@ impl Node {
     }
 
     fn add_child(&mut self, new_val: String) -> bool {
-        match self {
-            &mut Node{left: None, ..} => {
+        match *self {
+            Node{left: None, ..} => {
                 self.left = Some(Box::new(Node::new(new_val)));
                 true
             }
-            &mut Node{right: None, ..} => {
+            Node{right: None, ..} => {
                 self.right = Some(Box::new(Node::new(new_val)));
                 true
             }
@@ -72,45 +72,33 @@ impl Node {
     }
 
     fn has_children(&self) -> bool {
-        match self {
-            &Node{left: None, right: None, ..} => false,
+        match *self {
+            Node{left: None, right: None, ..} => false,
             _ => true,
         }
-    }
-
-    fn left(self) -> Option<Box<Node>> {
-        self.left
-    }
-
-    fn right(self) -> Option<Box<Node>> {
-        self.right
-    }
-
-    fn hash(self) -> String {
-        self.val
     }
 
     fn compute_hash(&self) -> String {
         let mut sha = Sha256::new();
 
-        match self {
-            &Node{left: Some(ref l), right: Some(ref r), ..} => {
+        match *self {
+            Node{left: Some(ref l), right: Some(ref r), ..} => {
                 let mut input = String::new();
-                input.push_str(&l.val[..]);
-                input.push_str(&r.val[..]);
-                sha.input_str(&input[..]);
+                input.push_str(&l.val);
+                input.push_str(&r.val);
+                sha.input_str(&input);
             },
-            &Node{left: Some(ref l), ..} => {
+            Node{left: Some(ref l), ..} => {
                 let mut input = String::new();
-                input.push_str(&l.val[..]);
-                input.push_str(&l.val[..]);
-                sha.input_str(&input[..]);
+                input.push_str(&l.val);
+                input.push_str(&l.val);
+                sha.input_str(&input);
             },
-            &Node{right: Some(ref r), ..} => {
+            Node{right: Some(ref r), ..} => {
                 let mut input = String::new();
-                input.push_str(&r.val[..]);
-                input.push_str(&r.val[..]);
-                sha.input_str(&input[..]);
+                input.push_str(&r.val);
+                input.push_str(&r.val);
+                sha.input_str(&input);
             },
             _ => {},
         };
@@ -119,42 +107,42 @@ impl Node {
     }
 
     fn validate(&self) -> bool {
-        match self {
-            &Node{left: Some(ref l), right: None, ..} => {
+        match *self {
+            Node{left: Some(ref l), right: None, ..} => {
                 if !l.validate() {
                     false
                 } else {
-                    if &self.compute_hash()[..] != &self.val[..] { false } else { true }
+                    if &self.compute_hash() != &self.val { false } else { true }
                 }
             },
-            &Node{right: Some(ref r), left: None, ..} => {
+            Node{right: Some(ref r), left: None, ..} => {
                 if !r.validate() {
                     false
                 } else {
-                    if &self.compute_hash()[..] != &self.val[..] { false } else { true }
+                    if &self.compute_hash() != &self.val { false } else { true }
                 }
             },
-            &Node{right: Some(ref r), left: Some(ref l), ..} =>{
+            Node{right: Some(ref r), left: Some(ref l), ..} =>{
                 if l.validate() && r.validate() {
-                    if &self.compute_hash()[..] != &self.val[..] { false } else { true }
+                    if &self.compute_hash() != &self.val { false } else { true }
                 } else {
                     false
                 }
             },
-            &Node{leaf: Some(ref lf), ..} => {
+            Node{leaf: Some(ref lf), ..} => {
                 let mut sha = Sha256::new();
                 sha.input_str(lf.get_info());
-                if &sha.result_str()[..] != &self.val[..] { false } else { true }
+                if &sha.result_str() != &self.val { false } else { true }
             },
             _ => true,
         }
     }
 
     fn corrupt_leaf(&mut self) {
-        match self {
-            &mut Node{left: Some(ref mut l), ..} => l.corrupt_leaf(),
-            &mut Node{right: Some(ref mut r), ..} => r.corrupt_leaf(),
-            &mut Node{leaf: Some(ref mut lf), ..} => lf.set_info("You were hacked.".to_string()),
+        match *self {
+            Node{left: Some(ref mut l), ..} => l.corrupt_leaf(),
+            Node{right: Some(ref mut r), ..} => r.corrupt_leaf(),
+            Node{leaf: Some(ref mut lf), ..} => lf.set_info("You were hacked.".to_string()),
             _ => {},
         }
     }
@@ -168,7 +156,6 @@ impl MerkleTree {
     pub fn new(leaf_v: Vec<Box<Leaf>>) -> MerkleTree {
         let mut v_1: Vec<Box<Node>> = Vec::new();
         let mut v_2: Vec<Box<Node>> = Vec::new();
-        let paths = fs::read_dir("./db/").unwrap();
 
         for lf in leaf_v {
             let mut sha = Sha256::new();
@@ -204,16 +191,10 @@ impl MerkleTree {
     }
 
     pub fn validate(&self) -> bool {
-        match self.head {
-            Some(ref n) => n.validate(),
-            _ => true,
-        }
+        if let Some(ref n) = self.head { n.validate() } else { true }
     }
 
     pub fn corrupt_tree(&mut self) {
-        match self.head {
-            Some(ref mut n) => n.corrupt_leaf(),
-            _ => {},
-        }
+        if let Some(ref mut n) = self.head { n.corrupt_leaf(); }
     }
 }
